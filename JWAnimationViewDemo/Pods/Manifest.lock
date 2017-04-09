@@ -1,0 +1,16 @@
+PODS:
+  - JWAnimationView (0.0.1)
+
+DEPENDENCIES:
+  - JWAnimationView (from `..`)
+
+EXTERNAL SOURCES:
+  JWAnimationView:
+    :path: ..
+
+SPEC CHECKSUMS:
+  JWAnimationView: 754e898692f9d0ca039791f5b1d40384e7c77490
+
+PODFILE CHECKSUM: e1c3143a05b1b8790f6bb747798c8b57b0a39043
+
+COCOAPODS: 1.2.0
