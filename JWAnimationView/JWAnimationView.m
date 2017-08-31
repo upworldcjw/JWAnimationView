@@ -77,13 +77,15 @@ typedef struct TimerRefreshAnimationItem{
     if (_selectedIndex != selectedIndex) {
         if (animation) {
             if (ABS(self.curToProgress - self.indexItems[selectedIndex].progress) < 0.01) {
-                if (selectedIndex == self.markAngelIndex) {//防止尖角过度不自然
+                if (self.markAngelIndex > 0 && selectedIndex == self.markAngelIndex) {//防止尖角过度不自然
                     AnimationProgressItem *progressItem = self.indexItems[selectedIndex];
                     self.curToProgress = progressItem.progress;
                     [self setNeedsDisplay];
                 }
             }else{
-                [self fromIndex:_selectedIndex toIndex:selectedIndex duration:0.3];
+//                [self fromIndex:_selectedIndex toIndex:selectedIndex duration:0.3];
+                //平滑过度
+                [self smoothFromIndex:_selectedIndex toIndex:selectedIndex duration:0.3];
             }
         }else{
             AnimationProgressItem *progressItem = self.indexItems[selectedIndex];
@@ -147,22 +149,15 @@ typedef struct TimerRefreshAnimationItem{
     [self setProgress:realProgress];
 }
 
-//从一个index 移动到另一个index 需要多久时间
-- (void)fromIndex:(NSInteger)index
-          toIndex:(NSInteger)toIndex
-         duration:(CGFloat)duration{
-    [self animationDisable];
-//    NSInteger totalFrame = duration * fps;
-//    CGFloat framePerProgress = deltProgress/totalFrame;
-    
-    AnimationProgressItem *fromProgressItem = self.indexItems[index];
-    AnimationProgressItem *toProgressItem = self.indexItems[toIndex];
-    CGFloat deltProgress = toProgressItem.progress - fromProgressItem.progress;
-    BOOL moveToRight = toIndex > index;
-    
+
+- (void)fromProgress:(CGFloat)fromProgress
+          toProgress:(CGFloat)toProgress
+            duration:(CGFloat)duration{
+    BOOL moveToRight = fromProgress < toProgress;
+    CGFloat deltProgress = toProgress - fromProgress;
     IKTimerRefreshAnimationItem refreshItem;
-    refreshItem.fromPogress = fromProgressItem.progress;
-    refreshItem.toProgress = toProgressItem.progress;
+    refreshItem.fromPogress = fromProgress;
+    refreshItem.toProgress = toProgress;
     refreshItem.moveToRight = moveToRight;
     refreshItem.begintTimming =  CACurrentMediaTime();
     refreshItem.deltProgress = deltProgress;
@@ -171,9 +166,41 @@ typedef struct TimerRefreshAnimationItem{
     
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkRefresh)];
     // 根据屏幕大小设置
-//    NSInteger frameInterval = 1;
-//    _displayLink.frameInterval = frameInterval;
+    //    NSInteger frameInterval = 1;
+    //    _displayLink.frameInterval = frameInterval;
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+}
+
+//考虑下划线当前位置，从一个index 移动到另一个index 需要多久时间
+- (void)smoothFromIndex:(NSInteger)index
+          toIndex:(NSInteger)toIndex
+         duration:(CGFloat)duration{
+    [self animationDisable];
+    AnimationProgressItem *fromProgressItem = self.indexItems[index];
+    AnimationProgressItem *toProgressItem = self.indexItems[toIndex];
+    CGFloat fromProgress = fromProgressItem.progress;
+    CGFloat toProgress = toProgressItem.progress;
+    BOOL moveToRight = fromProgress < toProgress;
+    if (moveToRight) {//向右滑动
+        if (fromProgress < self.curToProgress && self.curToProgress < toProgress) {
+            fromProgress = self.curToProgress;
+        }
+    }else{
+        if(fromProgress > self.curToProgress && self.curToProgress > toProgress){
+            fromProgress = self.curToProgress;
+        }
+    }
+    [self fromProgress:fromProgress toProgress:toProgress duration:duration];
+}
+
+//从一个index 移动到另一个index 需要多久时间
+- (void)fromIndex:(NSInteger)index
+          toIndex:(NSInteger)toIndex
+         duration:(CGFloat)duration{
+    [self animationDisable];
+    AnimationProgressItem *fromProgressItem = self.indexItems[index];
+    AnimationProgressItem *toProgressItem = self.indexItems[toIndex];
+    [self fromProgress:fromProgressItem.progress toProgress:toProgressItem.progress duration:duration];
 }
 
 - (void)displayLinkRefresh{

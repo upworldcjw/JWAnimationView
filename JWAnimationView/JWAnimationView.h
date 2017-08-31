@@ -59,9 +59,6 @@
  */
 - (void)setSelectedIndex:(NSInteger)selectedIndex animation:(BOOL)animation;
 
-//显示进度（0-1）
-- (void)setProgress:(CGFloat)progress;
-
 //由于fromIndex:toIndex:duration: 内部通过timer定时器实现，所以在动画执行的过程不会被释放。动画执行完才开始释放
 //调用clear 可以强制释放
 - (void)clear;

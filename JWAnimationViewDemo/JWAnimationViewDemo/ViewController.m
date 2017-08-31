@@ -140,7 +140,7 @@
     if (progress > 1 ) {
       progress = 0;
     }
-    [self.animationView setProgress:progress ];
+//    [self.animationView setProgress:progress ];
     progress += 0.01;
   }];
 }
